@@ -130,4 +130,4 @@ if(USE_ANALOG_OUT)
 end
 
 % Save data  
-saveData ('C:\Users\fisherlab\Dropbox\Data\ImagingData_2pPlus_Smaug\BallData\',ballData, 'EPG_SPARC_');
+saveData ('C:\Users\fisherlab\Dropbox\Data\ImagingData_2pPlus_Smaug\BallData\',ballData, 'EPG_imaging_');
