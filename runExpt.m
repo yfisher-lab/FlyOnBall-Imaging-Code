@@ -23,18 +23,22 @@ panelParams.panelModeNum = [3, 0];
 panelParams.patternNum = 1;
 panelParams.initialPosition = [0, 0];
 
+% set full aq time if not sending analog out
+fullTime = 400; % seconds
+
 % Configure LED flashes (sample code for any analog output)
 LEDParams.baselineTime = 1; %initial time LED off in second
 LEDParams.LEDonTime = 15; % time LED on in second
 LEDParams.afterTime = 4; % time LED off in second
-LEDParams.REP_NUM = 10; %60*10;
+LEDParams.REP_NUM = 10; %60*10=
 
 %% Start FicTrac in background from current experiment directory (config file must be in directory)
-FT_PATH = 'C:\Users\fisherlab\Documents\FicTrac 2.1.1\';
+FT_PATH = 'C:\Users\fisherlab\Documents\FicTrac211\';
 FT_EXE_FILENAME = 'fictrac.exe';
 cmdStr = ['cd "', FT_PATH, '" ', '& start ', FT_PATH, FT_EXE_FILENAME];
-system(cmdStr);
+system(cmdStr); % run on windows system
 pause(4);
+
 
 % Call socket_client_360 to open socket connection from fictrac to Phiget22 device
 % to edit socket_client_360 you can use PyCharm Edu
@@ -43,13 +47,14 @@ SOCKET_SCRIPT_NAME = 'socket_client_360.py';
 cmdstring = ['cd "' Socket_PATH '" & py ' SOCKET_SCRIPT_NAME ' &'];
 [status] = system(cmdstring, '-echo');
 
+
 %% Run panels
 if(USE_PANELS)
     setUpClosedLoopPanelTrial(panelParams);    
     Panel_com('start');
 end
 
-%% Recording the data!!!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+% Recording the data!!!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 % Fictrac ball heading (0-10V)
 % Panel pattern postion (x pos)  
 
@@ -63,18 +68,25 @@ addinput(dq,"Dev1", "ai0","Voltage"); % add analog input(AI) primary channel (xp
 addinput(dq,"Dev1", "ai1","Voltage"); % add AI secondary channel (ball_heading/ yaw)
 addinput(dq,"Dev1", "ai2","Voltage"); % add AI third channel (ball_heading/ xPos)
 addinput(dq,"Dev1", "ai3","Voltage"); % add AI fourth channel (ball_heading/ yPos)
+addinput(dq,"Dev1", "ai4","Voltage"); % add piezo position output
+addinput(dq,"Dev1", "ai5","Voltage"); % add res frame start trigger 
+addinput(dq,"Dev1", "ai6","Voltage"); % add Z trigger volume start
 addoutput(dq, "Dev1", "ao0", "Voltage"); % add AO primary channel (output device e.g. LED)
 
 dq.Channels(1).TerminalConfig = 'SingleEnded'; %save info that channel is in single ended on BOB 
 dq.Channels(2).TerminalConfig = 'SingleEnded';
 dq.Channels(3).TerminalConfig = 'SingleEnded';
 dq.Channels(4).TerminalConfig = 'SingleEnded';
+dq.Channels(5).TerminalConfig = 'SingleEnded';
+dq.Channels(6).TerminalConfig = 'SingleEnded';
+dq.Channels(7).TerminalConfig = 'SingleEnded';
 
 %% Build commandOut for triggering devices (e.g. LEDs)
 % create empty commmand out array
 commandOut = [];
 HIGHVOLTAGE = 5; % V
-dq.Rate = 1000; % set sample rate for daq
+dq.Rate = 40000; % set sample rate for daq
+dq_rate = dq.Rate;
 
 if(USE_ANALOG_OUT)
     % Creating output array
@@ -92,6 +104,28 @@ if(USE_PANELS)     % Turn panels off when aquisition is finished
     Panel_com('stop');
     Panel_com('all_off'); % LEDs panel off
 end
+
+%%
+
+% % frame start
+% plot((1:length(data.Dev1_ai5))/dq.Rate, data.Dev1_ai5); hold on;
+% %piezo
+% plot((1:length(data.Dev1_ai4))/dq.Rate, data.Dev1_ai4); hold on;
+% 
+% %volume start
+% plot((1:length(data.Dev1_ai6))/dq.Rate, data.Dev1_ai6); hold on;
+
+
+% change = diff(data.Dev1_ai5>2.5);
+% startInd = find(change>0);
+% endInd = find(change<0);
+% 
+% frameTimeList = (endInd - startInd) / dq.Rate;
+% 
+% breakTimeList = (startInd(2:end) - endInd(1:end-1)) / dq.Rate;
+
+
+
 
 %% Save Data
 
@@ -130,4 +164,4 @@ if(USE_ANALOG_OUT)
 end
 
 % Save data  
-saveData ('C:\Users\fisherlab\Dropbox\Data\ImagingData_2pPlus_Smaug\BallData\',ballData, 'EPG_imaging_');
+saveData ('C:\Users\fisherlab\Dropbox\Data\ImagingData_2pPlus_Smaug\BallData\',ballData, 'Tianhao_EPG_imaging');
