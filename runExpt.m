@@ -14,7 +14,7 @@ clear all;
 
 % Currently unused functionality 
 USE_PANELS = false; %controls whether panels are used in trial (false -> off; true -> on)
-USE_ANALOG_OUT = false; %controls whether an LED or other triggered devise is used (false -> off; true -> on)
+USE_ANALOG_OUT = true; %controls whether an LED or other triggered devise is used (false -> off; true -> on)
 
 % Configure panels, for closed loop mode and set up which pattern to use
 % and set up external tiggering if you want things to
@@ -24,7 +24,7 @@ panelParams.patternNum = 1;
 panelParams.initialPosition = [0, 0];
 
 % set full aq time if not sending analog out
-fullTime = 400; % seconds
+fullTime = 10; % seconds
 
 % Configure LED flashes (sample code for any analog output)
 LEDParams.baselineTime = 1; %initial time LED off in second
@@ -37,7 +37,7 @@ FT_PATH = 'C:\Users\fisherlab\Documents\FicTrac211\';
 FT_EXE_FILENAME = 'fictrac.exe';
 cmdStr = ['cd "', FT_PATH, '" ', '& start ', FT_PATH, FT_EXE_FILENAME];
 system(cmdStr); % run on windows system
-pause(4);
+pause(1);
 
 
 % Call socket_client_360 to open socket connection from fictrac to Phiget22 device
@@ -71,7 +71,7 @@ addinput(dq,"Dev1", "ai3","Voltage"); % add AI fourth channel (ball_heading/ yPo
 addinput(dq,"Dev1", "ai4","Voltage"); % add piezo position output
 addinput(dq,"Dev1", "ai5","Voltage"); % add res frame start trigger 
 addinput(dq,"Dev1", "ai6","Voltage"); % add Z trigger volume start
-addoutput(dq, "Dev1", "ao0", "Voltage"); % add AO primary channel (output device e.g. LED)
+addoutput(dq, "Dev1", "ao0", "Voltage"); % add AO primary channel (output device timing triggers 100 Hz)
 
 dq.Channels(1).TerminalConfig = 'SingleEnded'; %save info that channel is in single ended on BOB 
 dq.Channels(2).TerminalConfig = 'SingleEnded';
@@ -81,17 +81,28 @@ dq.Channels(5).TerminalConfig = 'SingleEnded';
 dq.Channels(6).TerminalConfig = 'SingleEnded';
 dq.Channels(7).TerminalConfig = 'SingleEnded';
 
-%% Build commandOut for triggering devices (e.g. LEDs)
+%% Build commandOut for triggering devices 
 % create empty commmand out array
 commandOut = [];
 HIGHVOLTAGE = 5; % V
-dq.Rate = 40000; % set sample rate for daq
-dq_rate = dq.Rate;
+dq.Rate = 1000; % set sample rate for daq
+
+TRIGGER_RATE = 100;
+TRIGGER_DUR =  0.001; % seconds
 
 if(USE_ANALOG_OUT)
-    % Creating output array
-    commandOut = [zeros(LEDParams.baselineTime * dq.Rate , 1); HIGHVOLTAGE * ones(LEDParams.LEDonTime * dq.Rate, 1); zeros(LEDParams.afterTime * dq.Rate, 1)]; % LED on/off sequence matrix
-    commandOut = repmat(commandOut,[LEDParams.REP_NUM,1]);
+    commandOut = zeros(fullTime * dq.Rate, 1);
+    if( mod(dq.Rate, TRIGGER_RATE) ~= 0 )
+        warning('Error: your tigger rate must divide evenly into the aquisition rate')
+    end
+
+    for i = 1: int16(dq.Rate/TRIGGER_RATE) :length(commandOut)
+    
+        up_frames = ceil( TRIGGER_DUR*dq.Rate ); 
+        commandOut(i: i + up_frames-1) = HIGHVOLTAGE;
+    end
+
+
 else
     % create empty commandOut for times when not used
     commandOut = zeros(fullTime * dq.Rate, 1);
@@ -153,7 +164,7 @@ ballData.data.ballxPosDeg = ball_xPos;
 ballData.data.ballyPosDeg = ball_yPos;
 ballData.data.x_posRad = x_posRad;
 ballData.data.ballHeadingRad = ball_headingRad;
-ballData.dqRate = dq_rate;
+ballData.dqRate = dq.Rate;
 ballData.data.LEDcommand = commandOut;
 
 if(USE_PANELS)
@@ -165,3 +176,4 @@ end
 
 % Save data  
 saveData ('C:\Users\fisherlab\Dropbox\Data\ImagingData_2pPlus_Smaug\BallData\',ballData, 'Tianhao_EPG_imaging');
+
