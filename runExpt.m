@@ -145,6 +145,8 @@ x_pos = (data.Dev1_ai0); % DAC0 output from controller gives x frame
 ball_heading = (data.Dev1_ai1); % phidget output 
 ball_xPos = (data.Dev1_ai2); % phidget output 
 ball_yPos = (data.Dev1_ai3); % phidget output 
+%% TODO !!!!!!
+% save frame and piezo position information
 
 % change V to angle
 x_posRad = (x_pos) * (2 *pi) / 10;  % V to radians
