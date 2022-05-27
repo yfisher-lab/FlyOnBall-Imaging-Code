@@ -72,7 +72,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         # Only try to receive data if there is data waiting
         if ready[0]:
             # Receive one data frame
-            new_data = sock.recv(1024)
+            new_data = sock.recv(1024) # new_data = 0 if no bytes sent
             
             # Uh oh?
             if not new_data:
