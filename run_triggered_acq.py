@@ -1,5 +1,4 @@
 from threading import Thread
-import nidaqmx
 from Phidget22.Devices.VoltageOutput import VoltageOutput as PhidgetVO
 import socket
 import select
@@ -120,12 +119,6 @@ class PhidgetControl:
 
 def run_phidget_thread():
     PhidgetControl().run()
-
-def run_matlab_engine_thread():
-    eng = matlab.engine.start_matlab()
-    # eng.eval("C:\\Users\\fisherlab\\Documents\\repos\\FlyOnBall-Imaging-Code\\sample_daq_io.m",nargout=0)
-    eng.eval("cd C:\\Users\\fisherlab\\Documents\\repos\\FlyOnBall-Imaging-Code",nargout=0)
-    eng.eval("sample_daq_io",nargout=0)
 
 if __name__ == "__main__":
 
