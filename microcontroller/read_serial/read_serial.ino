@@ -9,9 +9,9 @@ float ft_x;
 float ft_y;
 const byte ft_frame_pin = 2;
 // put pwm pins on same flexPWM timer (FlexPWM1.2)
-const byte ft_heading_pin = 24;
-const byte ft_x_pin = 46; 
-const byte ft_y_pin = 47;
+const byte ft_heading_pin = 7;
+const byte ft_x_pin = 8; 
+const byte ft_y_pin = 25;
 const byte pwm_resolution = 12; // if you change this, need to change optimal fwm freq (https://www.pjrc.com/teensy/td_pulse.html)
 const int max_pwm_val = 4095; // 0-4095 => <0-5 V>, change if you change pwm_resolution
 const double optimal_pwm_freq = 36621.09; // 
@@ -33,7 +33,7 @@ bool bk_opto_trig_state = false;
 int bk_opto_trig_timestamp;
 const int bk_trig_timeout = 100;
 
-const byte cam_trig_pin = 25;
+const byte cam_trig_pin = 3;
 int cam_pin_val;
 
 
