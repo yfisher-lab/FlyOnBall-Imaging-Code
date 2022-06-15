@@ -33,6 +33,9 @@ bool bk_opto_trig_state = false;
 int bk_opto_trig_timestamp;
 const int bk_trig_timeout = 100;
 
+const byte cam_trig_pin = 25;
+int cam_pin_val;
+
 
 
 
@@ -66,6 +69,9 @@ void setup() {
   pinMode(bk_opto_trig_pin, OUTPUT);
   digitalWriteFast(bk_opto_trig_pin, LOW);
   bk_opto_trig_timestamp = millis();
+
+  // camera trig
+//  pinMode(cam_trig_pin,INPUT);
   
   
   
@@ -75,19 +81,27 @@ void setup() {
 void yield() {} // get rid of hidden arduino yield function
 
 FASTRUN void loop() { // FASTRUN teensy keyword
-  noInterrupts(); // prevent interrupts
-  while(1) {  // infinite loop to run as fast as possible
+//  noInterrupts(); // prevent interrupts
+//  while(1) {  // infinite loop to run as fast as possible
     ft_state();
     bk_state();
-  }
+
+    cam_pin_val = analogRead(cam_trig_pin);
+    if (cam_pin_val>90){
+      SerialUSB2.print("frame \t");
+      SerialUSB2.print(cam_pin_val);
+      SerialUSB2.print("\n");
+    } 
+//  }
 }
 
 void ft_state() {
   recv_ft_data(); 
   if (ft_new_data == true) {
-    SerialUSB2.print(ft_chars); // for debugging
-    SerialUSB2.print(ft_index);
-    SerialUSB2.println();
+//    SerialUSB2.print(ft_chars); // for debugging
+//    SerialUSB2.print('\t');
+//    SerialUSB2.print(ft_index);
+//    SerialUSB2.println();
     strcpy(_ft_chars, ft_chars); // prevent overwriting
     ft_state_machine();
     ft_new_data = false;
