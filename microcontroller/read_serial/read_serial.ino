@@ -14,10 +14,10 @@ const byte ft_x_pin = 8;
 const byte ft_y_pin = 25;
 const byte pwm_resolution = 12; // if you change this, need to change optimal fwm freq (https://www.pjrc.com/teensy/td_pulse.html)
 const int max_pwm_val = 4095; // 0-4095 => <0-5 V>, change if you change pwm_resolution
-const double optimal_pwm_freq = 36621.09; // 
+const int optimal_pwm_freq = 44820; //36621.09; // 
 //
 const byte ft_num_cols = 26; // check this
-const byte ft_dropped_frame_pin = 3;
+const byte ft_dropped_frame_pin = 9;
 
 //Bruker Triggers
 const byte bk_start_scan_pin = 4;
@@ -33,11 +33,11 @@ bool bk_opto_trig_state = false;
 int bk_opto_trig_timestamp;
 const int bk_trig_timeout = 100;
 
-const byte cam_trig_pin = 3;
+const byte cam_trig_pin = 24;
 int cam_pin_val;
 
 
-
+// change FT pin to toggle each frame to that pin has time to get high
 
 
 void setup() {
@@ -46,7 +46,7 @@ void setup() {
   // FicTrac setup
   // digital pins
   pinMode(ft_frame_pin,OUTPUT);
-  digitalWriteFast(ft_frame_pin,LOW);
+  digitalWrite(ft_frame_pin,LOW);
   pinMode(ft_dropped_frame_pin, OUTPUT); 
   digitalWriteFast(ft_dropped_frame_pin, LOW);
 
@@ -71,7 +71,7 @@ void setup() {
   bk_opto_trig_timestamp = millis();
 
   // camera trig
-//  pinMode(cam_trig_pin,INPUT);
+  pinMode(cam_trig_pin,INPUT);
   
   
   
@@ -86,12 +86,12 @@ FASTRUN void loop() { // FASTRUN teensy keyword
     ft_state();
     bk_state();
 
-    cam_pin_val = analogRead(cam_trig_pin);
-    if (cam_pin_val>90){
-      SerialUSB2.print("frame \t");
-      SerialUSB2.print(cam_pin_val);
-      SerialUSB2.print("\n");
-    } 
+//    cam_pin_val = analogRead(cam_trig_pin);
+//    if (cam_pin_val>90){
+//      SerialUSB2.print("frame \t");
+//      SerialUSB2.print(cam_pin_val);
+//      SerialUSB2.print("\n");
+//    } 
 //  }
 }
 
@@ -151,6 +151,7 @@ void ft_state_machine() {
     case 0: // new FicTrac frame
       // flip ft pin high
       digitalWriteFast(ft_frame_pin,HIGH);
+      break;
 
     case 17: // heading 
       // flip ft pin low 
@@ -158,14 +159,22 @@ void ft_state_machine() {
 
       // update heading pin
       analogWrite(ft_heading_pin, int(max_pwm_val * atof(_ft_chars) / (2 * PI)));
+      break;
     
-    case 20: // x
+    case 12: // x
       // update x pin
-      analogWrite(ft_x_pin, int(max_pwm_val * fmod(atof(_ft_chars),2 * PI) / (2 * PI)));
+      SerialUSB2.print((atof(_ft_chars) + PI));
+      SerialUSB2.print('\t');
+      SerialUSB2.print(int(max_pwm_val * (atof(_ft_chars) + PI) / (2 * PI)));
+      SerialUSB2.println();
+      analogWrite(ft_x_pin, int(max_pwm_val * (atof(_ft_chars)+PI) / (2 * PI))); 
+      break;
 
-    case 21: // y
+    case 13: // y
       // update y pin
-      analogWrite(ft_x_pin, int(max_pwm_val * fmod(atof(_ft_chars),2 * PI) / (2 * PI))); 
+      
+      analogWrite(ft_y_pin, int(max_pwm_val * (atof(_ft_chars)+PI) / (2 * PI))); 
+      break;
   }
   
 }
@@ -221,14 +230,17 @@ void bk_state_machine(int cmd) {
       digitalWriteFast(bk_start_scan_pin, HIGH);
       bk_start_scan_state = true;
       bk_start_scan_timestamp = millis();
+      break;
     case 2: // flip kill scan trigger high
       digitalWriteFast(bk_kill_scan_pin, HIGH);
       bk_kill_scan_state = true;
       bk_kill_scan_timestamp = millis();
+      break;
     case 3: // flip opto scan trigger high
       digitalWriteFast(bk_opto_trig_pin, HIGH);
       bk_opto_trig_state = true;
       bk_opto_trig_timestamp = millis();
+      break;
   }
 
 }
