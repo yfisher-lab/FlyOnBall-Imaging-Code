@@ -14,10 +14,10 @@ const byte ft_x_pin = 8;
 const byte ft_y_pin = 25;
 const byte pwm_resolution = 12; // if you change this, need to change optimal fwm freq (https://www.pjrc.com/teensy/td_pulse.html)
 const int max_pwm_val = 4095; // 0-4095 => <0-5 V>, change if you change pwm_resolution
-const int optimal_pwm_freq = 44820; //36621.09; // 
+const int optimal_pwm_freq = 36621.09; // 
 //
-const byte ft_num_cols = 26; // check this
-const byte ft_dropped_frame_pin = 9;
+const byte ft_num_cols = 26; 
+const byte ft_dropped_frame_pin = 9; // still need to check
 
 //Bruker Triggers
 const byte bk_start_scan_pin = 4;
@@ -31,7 +31,7 @@ int bk_kill_scan_timestamp;
 const byte bk_opto_trig_pin = 6;
 bool bk_opto_trig_state = false;
 int bk_opto_trig_timestamp;
-const int bk_trig_timeout = 100;
+const int bk_trig_timeout = 10;
 
 const byte cam_trig_pin = 24;
 int cam_pin_val;
@@ -104,6 +104,7 @@ void ft_state() {
 //    SerialUSB2.println();
     strcpy(_ft_chars, ft_chars); // prevent overwriting
     ft_state_machine();
+    ft_index = (ft_index+1) % ft_num_cols; // keep track of columns in fictrack  
     ft_new_data = false;
   }
   
@@ -125,13 +126,12 @@ void recv_ft_data() { // receive Fictrack data
 
           if (rc == endline) { // check to make sure this works, checks that columns are being counted correctly
             int _ft_index = ft_index + 1;
-            if (_ft_index != (ft_num_cols -1)) {
-              digitalWriteFast(ft_dropped_frame_pin,HIGH);
-              ft_index = ft_num_cols-2;
-              digitalWriteFast(ft_dropped_frame_pin,LOW);
+            if (_ft_index != (ft_num_cols )) {
+              digitalToggle(ft_dropped_frame_pin);
+//            ft_index = ft_num_cols-1;
             }
           }
-          ft_index = (ft_index+1) % ft_num_cols; // keep track of columns in fictrack  
+          
         }
         else {
           ft_chars[ndx] = rc;
@@ -145,6 +145,9 @@ void recv_ft_data() { // receive Fictrack data
 
 void ft_state_machine() {
 
+  
+  
+
   // switch case statement for variables of interest
   switch (ft_index) {
     
@@ -157,23 +160,39 @@ void ft_state_machine() {
       // flip ft pin low 
       digitalWriteFast(ft_frame_pin,LOW);
 
+      SerialUSB2.print("z \t");
+      SerialUSB2.print(_ft_chars);
+      SerialUSB2.print("\n");
+      
       // update heading pin
       analogWrite(ft_heading_pin, int(max_pwm_val * atof(_ft_chars) / (2 * PI)));
       break;
     
     case 12: // x
-      // update x pin
-      SerialUSB2.print((atof(_ft_chars) + PI));
-      SerialUSB2.print('\t');
-      SerialUSB2.print(int(max_pwm_val * (atof(_ft_chars) + PI) / (2 * PI)));
-      SerialUSB2.println();
+      
       analogWrite(ft_x_pin, int(max_pwm_val * (atof(_ft_chars)+PI) / (2 * PI))); 
       break;
 
     case 13: // y
-      // update y pin
       
       analogWrite(ft_y_pin, int(max_pwm_val * (atof(_ft_chars)+PI) / (2 * PI))); 
+      break;
+
+    case 20: // x
+      // debugging print x cumm
+      SerialUSB2.print("x \t");
+      SerialUSB2.print(_ft_chars);
+      SerialUSB2.print("\t");
+
+      break;
+
+    case 21: // y
+      // debugging print y cumm
+      SerialUSB2.print("y \t");
+      SerialUSB2.print(_ft_chars);
+      SerialUSB2.print("\t");
+      
+      
       break;
   }
   
