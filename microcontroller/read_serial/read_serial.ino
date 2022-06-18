@@ -9,8 +9,11 @@ float ft_x;
 float ft_y;
 const byte ft_frame_pin = 2;
 // put pwm pins on same flexPWM timer (FlexPWM1.2)
+// Wire
 const byte ft_heading_pin = 7;
+//Wire 1
 const byte ft_x_pin = 8; 
+//Wire 2
 const byte ft_y_pin = 25;
 const byte pwm_resolution = 12; // if you change this, need to change optimal fwm freq (https://www.pjrc.com/teensy/td_pulse.html)
 const int max_pwm_val = 4095; // 0-4095 => <0-5 V>, change if you change pwm_resolution
@@ -20,21 +23,24 @@ const byte ft_num_cols = 26;
 const byte ft_dropped_frame_pin = 9; // still need to check
 
 //Bruker Triggers
-const byte bk_start_scan_pin = 4;
+const byte bk_start_scan_pin = 33;
 bool bk_start_scan_state = false;
 int bk_start_scan_timestamp; 
 
-const byte bk_kill_scan_pin = 5;
-bool bk_kill_scan_state = false;
-int bk_kill_scan_timestamp;
+//const byte bk_kill_scan_pin = 34;
+//bool bk_kill_scan_state = false;
+//int bk_kill_scan_timestamp;
 
-const byte bk_opto_trig_pin = 6;
+const byte bk_opto_trig_pin = 34;
 bool bk_opto_trig_state = false;
 int bk_opto_trig_timestamp;
 const int bk_trig_timeout = 10;
 
-const byte cam_trig_pin = 24;
+const byte cam_trig_pin = 35;
 int cam_pin_val;
+
+// rx3 15
+// tx3 14
 
 
 // change FT pin to toggle each frame to that pin has time to get high
